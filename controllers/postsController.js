@@ -452,7 +452,7 @@ const updatePost = async (req, res) => {
 
   let imageLinks = undefined;
 
-  if (imageUrl) {
+  if (typeof imageUrl === 'string' && imageUrl !== null) {
     try {
       await cloudinary.v2.uploader.destroy(post.imageUrl.public_id);
       const result = await cloudinary.v2.uploader.upload(imageUrl, {
@@ -510,8 +510,9 @@ const deletePost = async (req, res) => {
     }
   }
   // return res.status(400).json({ message: 'Post ID Required' });
+
   try {
-    if (post.imageUrl) {
+    if (post.imageUrl.public_id !== undefined) {
       await cloudinary.v2.uploader.destroy(post.imageUrl.public_id);
     }
   } catch (error) {
