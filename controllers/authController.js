@@ -93,8 +93,8 @@ const register = async (req, res) => {
 
   if (!avatar) {
     imagesLinks = {
-      public_id: 'blog/avatars/hfd7xpap9t1n8keqbthl',
-      url: 'https://res.cloudinary.com/dutlb6kju/image/upload/v1745523090/blog/avatars/hfd7xpap9t1n8keqbthl.png',
+      public_id: 'blog/avatars/Profile_ecifnt',
+      url: 'https://res.cloudinary.com/dutlb6kju/image/upload/v1746370966/blog/avatars/Profile_ecifnt.png',
     };
   } else {
     try {

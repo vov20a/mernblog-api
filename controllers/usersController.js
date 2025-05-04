@@ -102,8 +102,8 @@ const createNewUser = async (req, res) => {
 
   if (!avatar) {
     imagesLinks = {
-      public_id: 'blog/avatars/hfd7xpap9t1n8keqbthl',
-      url: 'https://res.cloudinary.com/dutlb6kju/image/upload/v1745523090/blog/avatars/hfd7xpap9t1n8keqbthl.png',
+      public_id: 'blog/avatars/Profile_ecifnt',
+      url: 'https://res.cloudinary.com/dutlb6kju/image/upload/v1746370966/blog/avatars/Profile_ecifnt.png',
     };
   } else {
     try {
@@ -183,9 +183,11 @@ const updateUser = async (req, res) => {
 
   let imageLinks = undefined;
 
-  if (avatar) {
+  if (typeof avatar === 'string') {
     try {
-      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      if (user.avatar.public_id !== 'blog/avatars/Profile_ecifnt') {
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      }
 
       const result = await cloudinary.v2.uploader.upload(avatar, {
         folder: 'blog/avatars',
@@ -269,9 +271,11 @@ const updateUserAvatar = async (req, res) => {
 
   let imagesLinks = undefined;
 
-  if (avatar) {
+  if (typeof avatar === 'string') {
     try {
-      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      if (user.avatar.public_id !== 'blog/avatars/Profile_ecifnt') {
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      }
 
       const result = await cloudinary.v2.uploader.upload(avatar, {
         folder: 'blog/avatars',
@@ -388,7 +392,7 @@ const deleteUser = async (req, res) => {
     }
   }
 
-  if (user.avatar && user.avatar.public_id !== 'blog/avatars/hfd7xpap9t1n8keqbthl') {
+  if (user.avatar && user.avatar.public_id !== 'blog/avatars/Profile_ecifnt') {
     try {
       await cloudinary.v2.uploader.destroy(user.avatar.public_id);
     } catch (error) {
