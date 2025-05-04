@@ -5,9 +5,10 @@ const verifyJWT = require('../middlewares/verifyJWT');
 
 router.route('/restore').post(mailsController.checkEmail);
 router.route('/create').post(mailsController.updateUser);
-router.route('/activate/:link').get( mailsController.activate);
+router.route('/activate/:link').get(mailsController.activate);
 
 router.use(verifyJWT);
 router.route('/').post(mailsController.sendOrderMail);
+router.route('/message').post(mailsController.sendMessage);
 
 module.exports = router;

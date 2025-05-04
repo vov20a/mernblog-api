@@ -26,7 +26,7 @@ async function send(receiver, message) {
       //'from' the same as 'auth.user'
       from: 'alexeevvova1960@gmail.com',
       to: receiver,
-      subject: 'Mern-Shopper',
+      subject: 'Vova-blog',
       text: message,
       html: `<b>${message}</b>`,
     });

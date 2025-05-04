@@ -5,9 +5,13 @@ const verifyJWT = require('../middlewares/verifyJWT');
 
 router.use(verifyJWT);
 
+router.route('/all').get(usersController.getAllUsers);
+router.route('/password').patch(usersController.updateUserPassword);
+router.route('/avatar').patch(usersController.updateUserAvatar);
+
 router
   .route('/')
-  .get(usersController.getAllUsers)
+  .get(usersController.getUsers)
   .post(usersController.createNewUser)
   .patch(usersController.updateUser)
   .delete(usersController.deleteUser);

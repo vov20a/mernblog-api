@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('cloudinary');
 
 // @desc Login
 // @route POST /auth
@@ -28,6 +29,7 @@ const login = async (req, res) => {
         username: foundUser.username,
         email: foundUser.email,
         roles: foundUser.roles,
+        avatarUrl: foundUser.avatar.url,
         id: foundUser.id,
       },
     },
@@ -36,9 +38,15 @@ const login = async (req, res) => {
   );
 
   const refreshToken = jwt.sign(
-    { username: foundUser.username, email: foundUser.email, id: foundUser.id },
+    {
+      username: foundUser.username,
+      email: foundUser.email,
+      roles: foundUser.roles,
+      avatarUrl: foundUser.avatar.url,
+      id: foundUser.id,
+    },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '7d' },
+    { expiresIn: '30d' },
   );
 
   // Create secure cookie with refresh token
@@ -46,7 +54,7 @@ const login = async (req, res) => {
     httpOnly: true, //accessible only by web server
     secure: true, //https
     sameSite: 'None', //cross-site cookie
-    maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+    maxAge: 30 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
   });
 
   // Send accessToken containing username and roles
@@ -57,7 +65,7 @@ const login = async (req, res) => {
 // @route POST /register
 // @access Public
 const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, avatar } = req.body;
 
   // Confirm data
   if (!username || !email || !password) {
@@ -80,16 +88,45 @@ const register = async (req, res) => {
     return res.status(409).json({ message: 'Duplicate email' });
   }
 
+  //==========cloudinary==============
+  let imagesLinks = undefined;
+
+  if (!avatar) {
+    imagesLinks = {
+      public_id: 'blog/avatars/hfd7xpap9t1n8keqbthl',
+      url: 'https://res.cloudinary.com/dutlb6kju/image/upload/v1745523090/blog/avatars/hfd7xpap9t1n8keqbthl.png',
+    };
+  } else {
+    try {
+      const result = await cloudinary.v2.uploader.upload(avatar, {
+        folder: 'blog/avatars',
+        width: 150,
+        crop: 'scale',
+      });
+
+      imagesLinks = {
+        public_id: result.public_id,
+        url: result.secure_url,
+      };
+    } catch (error) {
+      console.log(error);
+      return res.status(400).json({ message: 'Cloudinary error' });
+    }
+  }
+
   // Hash password
   const hashedPwd = await bcrypt.hash(password, 10); // salt rounds
 
   let userObject;
-  if (req.body.roles) {
-    userObject = { username, email, password: hashedPwd, roles: req.body.roles };
-  } else userObject = { username, email, password: hashedPwd };
+
+  userObject = { username, email, password: hashedPwd, roles: ['User'], avatar: imagesLinks };
 
   // Create and store new user
   const user = await User.create(userObject);
+
+  if (!user) {
+    res.status(400).json({ message: 'Invalid user data received' });
+  }
 
   const accessToken = jwt.sign(
     {
@@ -97,6 +134,7 @@ const register = async (req, res) => {
         username: user.username,
         email: user.email,
         roles: user.roles,
+        avatarUrl: user.avatar.url,
         id: user.id,
       },
     },
@@ -105,9 +143,15 @@ const register = async (req, res) => {
   );
 
   const refreshToken = jwt.sign(
-    { username: user.username, email: user.email, id: user.id },
+    {
+      username: user.username,
+      email: user.email,
+      roles: user.roles,
+      avatarUrl: user.avatar.url,
+      id: user.id,
+    },
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: '7d' },
+    { expiresIn: '30d' },
   );
 
   // Create secure cookie with refresh token
@@ -115,16 +159,13 @@ const register = async (req, res) => {
     httpOnly: true, //accessible only by web server
     secure: true, //https
     sameSite: 'None', //cross-site cookie
-    maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+    maxAge: 30 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
   });
 
-  // if (user) {
-  //   //created
-  //   res.status(201).json({ message: `Account: ${username} with ${email} created` });
-  // } else {
-  //   res.status(400).json({ message: 'Invalid user data received' });
-  // }
-  res.json({ accessToken });
+  if (user) {
+    //created
+    res.status(201).json({ accessToken, message: `${user.username} registered` });
+  }
 };
 
 // @desc Refresh
@@ -153,6 +194,7 @@ const refresh = (req, res) => {
           username: foundUser.username,
           email: foundUser.email,
           roles: foundUser.roles,
+          avatarUrl: foundUser.avatar.url,
           id: foundUser.id,
         },
       },

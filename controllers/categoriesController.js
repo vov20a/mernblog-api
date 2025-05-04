@@ -1,19 +1,22 @@
 const Category = require('../models/Category');
-const Product = require('../models/Product');
+const Post = require('../models/Post');
 
 // @desc Get all categories
 // @route GET /categories
 // @access Public
 const getAllCategories = async (req, res) => {
   // Get all categories from MongoDB
-  const cats = await Category.find().populate('parentCategory').lean();
+
+  const count = await Category.countDocuments().lean();
+  // const cats = await Category.find().populate('parentCategory').lean();
+  const cats = await Category.find().lean();
 
   // If no categories
   if (!cats?.length) {
     return res.status(400).json({ message: 'No categories found' });
   }
 
-  res.status(200).json(cats);
+  res.status(200).json({ categories: cats, count, message: 'Get All Cats' });
 };
 
 // @desc Get one category
@@ -38,11 +41,10 @@ const getOneCategory = async (req, res) => {
 
 // @desc Create new category
 // @route POST /categories
-//@if category-parent, parentCategory=0,else parentCategory= categoryId of parent cat
 // @access Private
 const createNewCategory = async (req, res) => {
   // Create and store new product-only 'Manager' or 'Admin'
-  if (!req.roles.includes('Manager') || !req.roles.includes('Admin')) {
+  if (!req.roles.includes('Admin')) {
     return res.status(403).json({ message: 'No access' });
   }
 
@@ -63,10 +65,7 @@ const createNewCategory = async (req, res) => {
   }
   const category = await Category.create({ title, parentCategory });
   if (category) {
-    //created
-    res
-      .status(201)
-      .json({ message: `New category ${title} of categoryId ${category._id} created` });
+    res.status(201).json({ message: `Category ${title} created` });
   } else {
     res.status(400).json({ message: 'Invalid category data received' });
   }
@@ -77,15 +76,12 @@ const createNewCategory = async (req, res) => {
 // @access Private
 const updateCategory = async (req, res) => {
   // Update product-only 'Manager' or 'Admin'
-  if (!req.roles.includes('Manager') || !req.roles.includes('Admin')) {
+  if (!req.roles.includes('Admin')) {
     return res.status(403).json({ message: 'No access' });
   }
 
   const { id, title, parentCategory } = req.body;
   // console.log(parentCategory);
-  let parent;
-  parentCategory === '0' ? (parent = null) : (parent = parentCategory);
-  // console.log(parent);
 
   // Confirm data
   if (!id || !title || !parentCategory) {
@@ -111,7 +107,7 @@ const updateCategory = async (req, res) => {
   }
 
   category.title = title;
-  category.parentCategory = parent;
+  category.parentCategory = parentCategory;
 
   const updatedCategory = await category.save();
 
@@ -123,14 +119,14 @@ const updateCategory = async (req, res) => {
 // @access Private
 const deleteCategory = async (req, res) => {
   // Delete product-only 'Manager' or 'Admin'
-  if (!req.roles.includes('Manager') || !req.roles.includes('Admin')) {
+  if (!req.roles.includes('Admin')) {
     return res.status(403).json({ message: 'No access' });
   }
 
   const { id } = req.body;
   // Confirm data
   if (!id) {
-    return res.status(400).json({ message: 'Product ID Required' });
+    return res.status(400).json({ message: 'Category ID Required' });
   }
 
   // Does the category exist to delete?
@@ -145,10 +141,10 @@ const deleteCategory = async (req, res) => {
     return res.status(400).json({ message: 'Category has child category' });
   }
 
-  // Does the category still have assigned products?
-  const product = await Product.findOne({ category: id }).lean().exec();
-  if (product) {
-    return res.status(400).json({ message: 'Category has assigned products' });
+  // Does the category still have assigned posts?
+  const post = await Post.findOne({ category: id }).lean().exec();
+  if (post) {
+    return res.status(400).json({ message: 'Category has assigned post' });
   }
 
   const result = await category.deleteOne();

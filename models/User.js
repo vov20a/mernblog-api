@@ -17,7 +17,17 @@ const userSchema = new mongoose.Schema(
     },
     roles: {
       type: [String],
-      default: ['Employee'],
+      default: ['User'],
+    },
+    avatar: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
   },
   { timestamps: true },

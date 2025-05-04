@@ -58,8 +58,11 @@ const checkEmail = async (req, res) => {
                     <p>Ссылка действительна 10 минут</p>
                     <a href=${process.env.API_URL}/mails/activate/${activationLink}>Перейдите по ссылке</a>`;
 
-  await send(email, message);
-  res.json(email);
+  const result = await send(email, message);
+  if (result.error) {
+    return res.status(401).json({ message: `Email was not send` });
+  }
+  res.status(201).json({ message: `Email was send on ${email}` });
 };
 
 // @desc GET redirect to user site
@@ -140,6 +143,7 @@ const updateUser = async (req, res) => {
           email: user.email,
           roles: user.roles,
           id: user.id,
+          avatarUrl: user.avatar.url,
         },
       },
       process.env.ACCESS_TOKEN_SECRET,
@@ -147,9 +151,15 @@ const updateUser = async (req, res) => {
     );
 
     const refreshToken = jwt.sign(
-      { username: user.username, email: user.email, id: user.id },
+      {
+        username: user.username,
+        email: user.email,
+        id: user.id,
+        roles: user.roles,
+        avatarUrl: user.avatar.url,
+      },
       process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: '7d' },
+      { expiresIn: '30d' },
     );
 
     // Create secure cookie with refresh token
@@ -157,11 +167,40 @@ const updateUser = async (req, res) => {
       httpOnly: true, //accessible only by web server
       secure: true, //https
       sameSite: 'None', //cross-site cookie
-      maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
+      maxAge: 30 * 24 * 60 * 60 * 1000, //cookie expiry: set to match rT
     });
 
     res.json({ accessToken });
   });
+};
+
+// @desc POST send message to admin
+// @route POST /mails/message
+// @access Private
+const sendMessage = async (req, res) => {
+  const { text, username } = req.body;
+
+  // Confirm data
+  if (!text || !username) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  // const adminArr = await User.find({ roles: { $eq: ['Admin'] } })
+  //   .select('-password')
+  //   .lean();
+  const emailAdmin = process.env.EMAIL_ADMIN;
+
+  if (!emailAdmin) {
+    return res.status(404).json({ message: 'Not found admin email' });
+  }
+  const message = `<h2>Message from "${username}":</h2>
+                            <p>${text}</p>`;
+
+  const result = await send(emailAdmin, message);
+  if (result.error) {
+    return res.status(401).json({ message: `Email was not send` });
+  }
+  res.status(201).json({ message: `Email was send on ${emailAdmin}` });
 };
 
 module.exports = {
@@ -169,4 +208,5 @@ module.exports = {
   checkEmail,
   updateUser,
   activate,
+  sendMessage,
 };
