@@ -66,9 +66,23 @@ const createNewComment = async (req, res) => {
     usersArray: [user],
   };
 
-  const commObject = { text, post, user, parentComment: parent_id, likes };
-  // Create and store new comm
+  // Check for duplicate username
+  const duplicateText = await Comment.findOne({ text })
+    .collation({ locale: 'en', strength: 2 })
+    .lean()
+    .exec();
+
+  let newText = undefined;
+
+  if (duplicateText) {
+    newText = text + ' [ErrCode ' + (+new Date()).toString(16) + ']';
+
+    // return res.status(409).json({ message: 'Duplicate text' });
+  }
+
+  const commObject = { text: newText ?? text, post, user, parentComment: parent_id, likes };
   const comment = await Comment.create(commObject);
+
   if (comment) {
     res.status(201).json({ message: `Comment  created` });
   } else {
