@@ -12,10 +12,8 @@ const corsOptions = require('./config/corsOptions');
 const connectDB = require('./config/dbConn');
 const mongoose = require('mongoose');
 const fileUpload = require('express-fileupload');
-const server = require('./socket');
 
 const PORT = process.env.PORT || 3500;
-const WS_PORT = process.env.WS_PORT || 5000;
 
 //save and load images
 cloudinary.config({
@@ -45,10 +43,6 @@ app.use('/posts', require('./routes/postRoutes'));
 app.use('/categories', require('./routes/categoryRoutes'));
 app.use('/comments', require('./routes/commentRoutes'));
 app.use('/mails', require('./routes/mailRoutes'));
-
-server.listen(WS_PORT, () => {
-  console.log('Socket started on port=5000');
-});
 
 app.all('*', (req, res) => {
   res.status(404);
