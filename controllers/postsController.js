@@ -3,7 +3,7 @@ const Comment = require('../models/Comment');
 const cloudinary = require('cloudinary');
 const ApiPostsFeatures = require('../utils/apiPostsFeatures.js');
 
-// @desc Get all users
+// @desc Get all posts
 // @route GET /posts
 // @access Public
 const getPosts = async (req, res) => {

@@ -43,6 +43,7 @@ app.use('/posts', require('./routes/postRoutes'));
 app.use('/categories', require('./routes/categoryRoutes'));
 app.use('/comments', require('./routes/commentRoutes'));
 app.use('/mails', require('./routes/mailRoutes'));
+app.use('/videos', require('./routes/videoRoutes'));
 
 app.all('*', (req, res) => {
   res.status(404);
